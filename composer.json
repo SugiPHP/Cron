@@ -1,0 +1,23 @@
+{
+    "name": "sugiphp/cron",
+    "type": "library",
+    "description": "Cron jobs with PHP",
+    "keywords": ["cron", "crontab", "cronjob"],
+    "licence": "MIT",
+    "authors": [
+        {
+            "name": "Plamen Popov",
+            "email": "tzappa@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.4"
+    },
+    "autoload": {
+        "psr-0": { 
+            "SugiPHP\\Cron\\": ""
+        }
+    },
+    "target-dir": "SugiPHP/Cron",
+    "minimum-stability": "dev"
+}
