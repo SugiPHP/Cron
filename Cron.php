@@ -10,7 +10,7 @@ namespace SugiPHP\Cron;
 
 /**
  * Cron jobs
- * 
+ *
  * Cronjobs are configured via crontab files similar to *NIX style.
  * For example one configuration file can look like this:
  * <code>
@@ -39,25 +39,26 @@ namespace SugiPHP\Cron;
  * # every day in 20:00, 21:00, 22:00 ... 6:00 and in 12:00
  * 0        20-6,12 *      *       *           at-night-and-at-noon.php
  * </code>
- * 
+ *
  * Lines starting with # are considered comments and are not executable
- * 
+ *
  * Cron entry file can be started via CLI or via web request (lynx, wget etc.)
  * It should be started every minute! Local cronjob is preferred
- * 
+ *
  * <code>
  * * 	*	*	*	*	/usr/bin/php /var/www/example.com/app/files/cron.php >/dev/null 2>&1
  * # or
  * *	*	*	*	*	wget -O /dev/null http://example.com/cron
  * # or
  * *	*	*	*	*	lynx -source http://example.com/cron
- * # or	
+ * # or
  * *	*	*	*	*	curl --silent --compressed http://example.com/cron
  * </code>
  */
 class Cron
 {
 	protected $file;
+	protected $searchPath = "./";
 	protected $timestamp;
 	protected $time = array();
 	protected $jobs = array();
@@ -68,7 +69,7 @@ class Cron
 
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param array $config
 	 */
 	public function __construct($config = array())
@@ -79,6 +80,10 @@ class Cron
 		// configuration file
 		if (!empty($config["file"])) {
 			$this->setFile($config["file"]);
+		}
+
+		if (!empty($config["search_path"])) {
+			$this->setSearchPath($config["search_path"]);
 		}
 
 		if (isset($config["time"])) {
@@ -105,6 +110,16 @@ class Cron
 		$this->parseFile();
 	}
 
+	public function setSearchPath($path)
+	{
+		$this->searchPath = rtrim($path, "/\\") . DIRECTORY_SEPARATOR;
+	}
+
+	public function getSearchPath()
+	{
+		return $this->searchPath;
+	}
+
 	public function onJobStart(callable $callback)
 	{
 		$this->jobStartCallback = $callback;
@@ -119,7 +134,7 @@ class Cron
 	{
 		$this->jobErrorCallback = $callback;
 	}
-	
+
 	/**
 	 * Start each cron task which has to start now
 	 */
@@ -135,28 +150,28 @@ class Cron
 			if ($this->jobStartCallback) {
 				call_user_func_array($this->jobStartCallback, [$file]);
 			}
-			
+
 			// each job will be in try/except block. If one job fails others will run (hopefully).
 			try {
-				include $file;
+				include $this->getSearchPath().$file;
 				if ($this->jobEndCallback) {
 					call_user_func_array($this->jobEndCallback, [$file]);
 				}
-			} 
+			}
 			catch (\Exception $e) {
 				if ($this->jobErrorCallback) {
 					call_user_func_array($this->jobErrorCallback, [$file, $e]);
 				}
 			}
 		}
-		
+
 		// restore old error handler
 		restore_error_handler();
 	}
-	
+
 	/**
 	 * Returns cron tasks that should start now
-	 * 
+	 *
 	 * @return array
 	 */
 	public function getJobs()
@@ -175,10 +190,10 @@ class Cron
 
 		return $return;
 	}
-	
+
 	/**
 	 * Returns all cron tasks
-	 * 
+	 *
 	 * @return array
 	 */
 	public function getAllJobs()
@@ -188,7 +203,7 @@ class Cron
 
 	/**
 	 * Sets the current time. This function is for testing purposes.
-	 * 
+	 *
 	 * @param integer $time UNIX TimeStamp
 	 */
 	public function setCurrentTime($time)
@@ -224,11 +239,11 @@ class Cron
 
 		// Don't execute PHP internal error handler
 		// return true;
-	}	
+	}
 
 	/**
 	 * Parsing unix timestamp
-	 * 
+	 *
 	 * @param  integer $timestamp Unix Timestamp
 	 * @return array
 	 */
@@ -248,20 +263,20 @@ class Cron
 
 		return $time;
 	}
-	
+
 	/**
 	 * Parses configuration file - cron jobs
-	 * 
+	 *
 	 * @return boolean - false on empty job list OR when no crontab file available
 	 */
 	protected function parseFile()
 	{
 		// clear all jobs
 		$this->jobs = array();
-		
+
 		// is the file loaded
 		if (!$this->file) return false;
-		
+
 		while (($row = fgets($this->file)) !== false) {
 			// check for commented rows
 			if (!$row = trim($row) or strpos($row, "#") === 0) {
@@ -283,7 +298,7 @@ class Cron
 			}
 		}
 	}
-	
+
 	protected function checkTimeValue($value, $min, $max, $time, $times)
 	{
 		// if we have lists
@@ -308,27 +323,27 @@ class Cron
 		return false;
 	}
 
-	
+
 	protected function checkMonth($value)
 	{
 		return $this->checkTimeValue($value, 1, 12, $this->time["month"], $this->time["months"]);
 	}
-	
+
 	protected function checkDay($value)
 	{
 		return $this->checkTimeValue($value, 0, 31, $this->time["day"], $this->time["days"]);
 	}
-	
+
 	protected function checkHour($value)
 	{
 		return $this->checkTimeValue($value, 0, 23, $this->time["hour"], $this->time["hours"]);
 	}
-	
+
 	protected function checkMin($value)
 	{
 		return $this->checkTimeValue($value, 0, 59, $this->time["min"], $this->time["mins"]);
 	}
-	
+
 	protected function checkDOW($value)
 	{
 		$values = explode(",", $value);
@@ -340,7 +355,7 @@ class Cron
 
 		return false;
 	}
-	
+
 	protected function checkRecursive($value)
 	{
 		if (strpos($value, "/") === 0) {
@@ -355,11 +370,11 @@ class Cron
 
 	/**
 	 * Validates integer value.
-	 * 
+	 *
 	 * @param  mixed $value
 	 * @param  integer $min
 	 * @param  integer $max
-	 * @param  mixed $default - this is what will be returned if the filter fails 
+	 * @param  mixed $default - this is what will be returned if the filter fails
 	 * @return mixed
 	 */
 	protected function filterInt($value, $min = false, $max = false, $default = false)
@@ -371,7 +386,7 @@ class Cron
 
 		return filter_var($value, FILTER_VALIDATE_INT, $options);
 	}
-	
+
 	protected function buildRegEx()
 	{
 		$cols = array(
@@ -388,7 +403,7 @@ class Cron
 			$regex .= "(?<$field>($interval)(\,($interval))*|\*|\*?\/($value))\s+";
 		}
 		$regex .= "(?<command>.*)";
-		
+
 		return "~^$regex$~";
 	}
 }
