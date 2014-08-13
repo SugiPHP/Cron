@@ -157,8 +157,7 @@ class Cron
 				if ($this->jobEndCallback) {
 					call_user_func_array($this->jobEndCallback, [$file]);
 				}
-			}
-			catch (\Exception $e) {
+			} catch (\Exception $e) {
 				if ($this->jobErrorCallback) {
 					call_user_func_array($this->jobErrorCallback, [$file, $e]);
 				}
@@ -275,7 +274,9 @@ class Cron
 		$this->jobs = array();
 
 		// is the file loaded
-		if (!$this->file) return false;
+		if (!$this->file) {
+			return false;
+		}
 
 		while (($row = fgets($this->file)) !== false) {
 			// check for commented rows
@@ -292,8 +293,7 @@ class Cron
 					"command" => $matches["command"],
 					// "start"   => $matches["start"],
 				);
-			}
-			else {
+			} else {
 				throw new \Exception("Invalid syntax in cron job $row");
 			}
 		}
@@ -306,20 +306,31 @@ class Cron
 		// for each instance of the list
 		foreach ($values as $val) {
 			// start always
-			if ($val == "*") return true;
+			if ($val == "*") {
+				return true;
+			}
 			// start at some interval
 			if (strpos($val, "-") > 0) {
 				list($from, $to) = explode("-", $val);
 				// like 8-20
-				if (($from <= $to) and ($time >= $from) and ($time <= $to)) return true;
+				if (($from <= $to) && ($time >= $from) && ($time <= $to)) {
+					return true;
+				}
 				// like 21-7
-				if (($from > $to) and (($time >= $from) or ($time <= $to))) return true;
+				if (($from > $to) && (($time >= $from) || ($time <= $to))) {
+					return true;
+				}
 			}
 			// exact match
-			if (($this->filterInt($val, $min, $max, false) !== false) and ($time == $val)) return true;
+			if (($this->filterInt($val, $min, $max, false) !== false) && ($time == $val)) {
+				return true;
+			}
 			// recursive
-			if (($val = $this->checkRecursive($val)) and ($times % $val === 0)) return true;
+			if (($val = $this->checkRecursive($val)) && ($times % $val === 0)) {
+				return true;
+			}
 		}
+
 		return false;
 	}
 
@@ -347,8 +358,8 @@ class Cron
 	protected function checkDOW($value)
 	{
 		$values = explode(",", $value);
-		foreach($values as $val) {
-			if (($val == "*") or (($this->filterInt($val, 0, 7, false) !== false) and ($this->time["dow"] == $val))){
+		foreach ($values as $val) {
+			if (($val == "*") || (($this->filterInt($val, 0, 7, false) !== false) && ($this->time["dow"] == $val))) {
 				return true;
 			}
 		}
@@ -380,9 +391,15 @@ class Cron
 	protected function filterInt($value, $min = false, $max = false, $default = false)
 	{
 		$options = array("options" => array());
-		if (isset($default)) $options["options"]["default"] = $default;
-		if (!is_null($min) AND ($min !== false)) $options["options"]["min_range"] = $min;
-		if (!is_null($max) AND ($max !== false)) $options["options"]["max_range"] = $max;
+		if (isset($default)) {
+			$options["options"]["default"] = $default;
+		}
+		if (!is_null($min) && ($min !== false)) {
+			$options["options"]["min_range"] = $min;
+		}
+		if (!is_null($max) && ($max !== false)) {
+			$options["options"]["max_range"] = $max;
+		}
 
 		return filter_var($value, FILTER_VALIDATE_INT, $options);
 	}

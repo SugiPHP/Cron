@@ -7,29 +7,32 @@
  * @license    http://opensource.org/licenses/mit-license.php (MIT License)
  */
 
+namespace SugiPHP\Cron;
+
 use SugiPHP\Cron\Cron;
+use PHPUnit_Framework_TestCase;
 
 class CronTest extends PHPUnit_Framework_TestCase
 {
-	function testCreateWithoutParams()
+	public function testCreateWithoutParams()
 	{
 		$cron = new Cron();
 		$this->assertEmpty($cron->getAllJobs());
 		$this->assertEmpty($cron->getJobs());
 	}
 
-	function testCreateWithConfigFile()
+	public function testCreateWithConfigFile()
 	{
 		$cron = new Cron(["file" => __DIR__."/cron.conf"]);
 		$this->assertCount(8, $cron->getAllJobs());
-		// Starting jobs (getJobs() method) can vary depending on current time		
+		// Starting jobs (getJobs() method) can vary depending on current time
 	}
 
-	function testJobsToStartBasedOnTime()
+	public function testJobsToStartBasedOnTime()
 	{
 		$cron = new Cron(["file" => __DIR__."/cron.conf"]);
 
-		// 00 seconds		
+		// 00 seconds
 		$cron->setCurrentTime(strtotime("2013-09-24 11:47:00"));
 		$jobs = $cron->getJobs();
 		$this->assertCount(1, $jobs);
