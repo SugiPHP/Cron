@@ -283,7 +283,7 @@ class Cron
 			if (!$row = trim($row) or strpos($row, "#") === 0) {
 				continue;
 			}
-			if ($res = preg_match($this->regEx, $row, $matches) !== 0) {
+			if (preg_match($this->regEx, $row, $matches) !== 0) {
 				$this->jobs[] = array(
 					"min"     => $matches["min"],
 					"hour"    => $matches["hour"],
